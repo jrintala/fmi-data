@@ -81,6 +81,7 @@ includes.append(workspace + '/himan-plugins/include')
 includes.append('/usr/include/smartmet/newbase')
 includes.append(workspace + '/fmidb/include')
 includes.append('/usr/include/gdal')
+includes.append('/usr/include/lapacke')
 
 if os.environ.get('ORACLE_HOME') is None:
         includes.append('/usr/include/oracle')
@@ -213,6 +214,7 @@ env.Append(NVCCFLAGS = ['-std=c++11'])
 env.Append(NVCCPATH = ['./include'])
 env.Append(NVCCPATH = [workspace + '/himan-plugins/include']) # cuda-helper
 env.Append(NVCCPATH = ['/usr/include/smartmet/newbase'])
+env.Append(NVCCPATH = ['/usr/include/lapacke'])
 
 # Other
 
