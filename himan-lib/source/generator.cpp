@@ -41,6 +41,7 @@ std::shared_ptr<himan::info> Max(InputIt begin, InputIt end)
 
 	return maxInfo;
 }
+template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::iterator,time_series::iterator);
 
 /*
  * Finds the minimum values for a series of info_t on the interval [begin,end)
@@ -76,5 +77,6 @@ std::shared_ptr<himan::info> Min(InputIt begin, InputIt end)
 
         return minInfo;
 }
+template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::iterator,time_series::iterator);
 
 }
