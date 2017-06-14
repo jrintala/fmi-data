@@ -3,7 +3,6 @@
 
 #include "fetcher.h"
 #include "himan_common.h"
-#include "plugin_factory.h"
 #include <iterator>
 
 namespace himan

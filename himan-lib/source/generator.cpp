@@ -1,4 +1,5 @@
 #include "generator.h"
+#include "plugin_factory.h"
 
 namespace himan
 {
@@ -58,14 +59,9 @@ time_series::iterator& time_series::iterator::Next()
 template <class InputIt>
 std::shared_ptr<himan::info> Max(InputIt begin, InputIt end)
 {
-	std::cout << "start" << std::endl;
-	// If time series has zero length
-	if (begin == end) return nullptr;
-
-	// Find first field that cntains data
+	// Find first field that contains data
 	while (*begin == nullptr)
 	{
-		std::cout << "nulptr!" << std::endl;
 		++begin;
 		if (begin == end) return nullptr;
 	}
@@ -80,11 +76,7 @@ std::shared_ptr<himan::info> Max(InputIt begin, InputIt end)
 	// Update set of maximum values
 	for (; begin != end; ++begin)
 	{
-		if (*begin == nullptr)
-		{
-			std::cout << "empty field, skipping" << std::endl;
-			continue;
-		}
+		if (*begin == nullptr) continue;
 
 		auto in = VEC((*begin)).begin();
 		auto out = VEC(maxInfo).begin();
@@ -106,8 +98,6 @@ template std::shared_ptr<himan::info> Max<std::vector<std::shared_ptr<himan::inf
 template <class InputIt>
 std::shared_ptr<himan::info> Min(InputIt begin, InputIt end)
 {
-	if (begin == end) return nullptr;
-
 	while (*begin == nullptr)
 	{
 		++begin;
@@ -132,4 +122,6 @@ std::shared_ptr<himan::info> Min(InputIt begin, InputIt end)
 	return minInfo;
 }
 template std::shared_ptr<himan::info> Min<time_series::iterator>(time_series::iterator, time_series::iterator);
+template std::shared_ptr<himan::info> Min<std::vector<std::shared_ptr<himan::info>>::iterator>(
+    std::vector<std::shared_ptr<himan::info>>::iterator, std::vector<std::shared_ptr<himan::info>>::iterator);
 }
