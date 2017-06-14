@@ -1,6 +1,55 @@
 #include "generator.h"
 
-namespace himan{
+namespace himan
+{
+time_series::iterator::iterator(std::shared_ptr<const plugin_configuration> theConfiguration, himan::param theParam,
+                                himan::level theLevel, himan::forecast_time theForecastTime,
+                                HPTimeResolution theTimeResolution, int theStepSize)
+    : itsConfiguration(theConfiguration),
+      itsParam(theParam),
+      itsLevel(theLevel),
+      itsForecastTime(theForecastTime),
+      itsTimeResolution(theTimeResolution),
+      itsStepSize(theStepSize)
+{
+	f = GET_PLUGIN(fetcher);
+	try
+	{
+		itsInfo = f->Fetch(itsConfiguration, itsForecastTime, itsLevel, itsParam);
+	}
+	catch (HPExceptionType& e)
+	{
+		if (e != kFileDataNotFound)
+		{
+			abort();
+		}
+		else
+		{
+			itsInfo = nullptr;
+		}
+	}
+}
+
+time_series::iterator& time_series::iterator::Next()
+{
+	itsForecastTime.ValidDateTime().Adjust(itsTimeResolution, itsStepSize);
+	try
+	{
+		itsInfo = f->Fetch(itsConfiguration, itsForecastTime, itsLevel, itsParam);
+	}
+	catch (HPExceptionType& e)
+	{
+		if (e != kFileDataNotFound)
+		{
+			abort();
+		}
+		else
+		{
+			itsInfo = nullptr;
+		}
+	}
+	return *this;
+}
 
 /*
  * Finds the maximum values for a series of info_t on the interval [begin,end)
@@ -9,27 +58,33 @@ namespace himan{
 template <class InputIt>
 std::shared_ptr<himan::info> Max(InputIt begin, InputIt end)
 {
+	std::cout << "start" << std::endl;
 	// If time series has zero length
 	if (begin == end) return nullptr;
 
 	// Find first field that cntains data
-        while (*begin == nullptr)
-        {
-                ++begin;
-                if (begin == end)
-                        return nullptr;
-        }
+	while (*begin == nullptr)
+	{
+		std::cout << "nulptr!" << std::endl;
+		++begin;
+		if (begin == end) return nullptr;
+	}
 
 	// Set first field as first set of maximum values
 	auto maxInfo = *begin;
 	maxInfo->ReGrid();
 	++begin;
 
+	std::cout << VEC(maxInfo).size() << std::endl;
+
 	// Update set of maximum values
 	for (; begin != end; ++begin)
 	{
-                if (*begin ==  nullptr)
-                        continue;
+		if (*begin == nullptr)
+		{
+			std::cout << "empty field, skipping" << std::endl;
+			continue;
+		}
 
 		auto in = VEC((*begin)).begin();
 		auto out = VEC(maxInfo).begin();
@@ -41,8 +96,9 @@ std::shared_ptr<himan::info> Max(InputIt begin, InputIt end)
 
 	return maxInfo;
 }
-template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::iterator,time_series::iterator);
-
+template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::iterator, time_series::iterator);
+template std::shared_ptr<himan::info> Max<std::vector<std::shared_ptr<himan::info>>::iterator>(
+    std::vector<std::shared_ptr<himan::info>>::iterator, std::vector<std::shared_ptr<himan::info>>::iterator);
 /*
  * Finds the minimum values for a series of info_t on the interval [begin,end)
  * */
@@ -50,33 +106,30 @@ template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::it
 template <class InputIt>
 std::shared_ptr<himan::info> Min(InputIt begin, InputIt end)
 {
-        if (begin == end) return nullptr;
+	if (begin == end) return nullptr;
 
 	while (*begin == nullptr)
 	{
 		++begin;
-		if (begin == end)
-			return nullptr;
+		if (begin == end) return nullptr;
 	}
 
-        auto minInfo = *begin;
-        minInfo->ReGrid();
+	auto minInfo = *begin;
+	minInfo->ReGrid();
 
-        for (; begin != end; ++begin)
-        {
-		if (*begin ==  nullptr)
-			continue;
+	for (; begin != end; ++begin)
+	{
+		if (*begin == nullptr) continue;
 
-                auto in = VEC((*begin)).begin();
-                auto out = VEC(minInfo).begin();
-                for (; out != VEC((*begin)).end(), out != VEC(minInfo).end(); ++in, ++out)
-                {
-                        *out = std::min(*in, *out);
-                }
-        }
+		auto in = VEC((*begin)).begin();
+		auto out = VEC(minInfo).begin();
+		for (; out != VEC((*begin)).end(), out != VEC(minInfo).end(); ++in, ++out)
+		{
+			*out = std::min(*in, *out);
+		}
+	}
 
-        return minInfo;
+	return minInfo;
 }
-template std::shared_ptr<himan::info> Max<time_series::iterator>(time_series::iterator,time_series::iterator);
-
+template std::shared_ptr<himan::info> Min<time_series::iterator>(time_series::iterator, time_series::iterator);
 }
